@@ -20,7 +20,7 @@ const sorted = videos
       <ul>
         {sorted.map((v) => (
           <li>
-            <div>{v.data.title}</div>
+           <a href={`/videos/${v.slug}/`}>{v.data.title}</a>
             <div>{v.data.date}</div>
             <div>{v.data.summary}</div>
           </li>

@@ -1,0 +1,69 @@
+---
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const videos = await getCollection("videos");
+  return videos.map((v) => ({
+    params: { slug: v.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+
+const videos = await getCollection("videos");
+const entry = videos.find((v) => v.slug === slug);
+
+if (!entry) {
+  return new Response("Not found", { status: 404 });
+}
+
+const { title, date, youtubeUrl, tags, summary } = entry.data;
+
+function toEmbedUrl(url: string) {
+  const u = new URL(url);
+
+  if (u.hostname.includes("youtube.com")) {
+    const id = u.searchParams.get("v");
+    if (id) return `https://www.youtube.com/embed/${id}`;
+  }
+
+  if (u.hostname === "youtu.be") {
+    const id = u.pathname.replace("/", "");
+    if (id) return `https://www.youtube.com/embed/${id}`;
+  }
+
+  return url;
+}
+
+const embedUrl = toEmbedUrl(youtubeUrl);
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <main>
+      <a href="/">Back</a>
+      <h1>{title}</h1>
+      <div>{date}</div>
+      {summary ? <p>{summary}</p> : null}
+
+      <iframe
+        width="560"
+        height="315"
+        src={embedUrl}
+        title={title}
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+      ></iframe>
+
+      <div>
+        {tags?.length ? <p>Tags: {tags.join(", ")}</p> : null}
+      </div>
+    </main>
+  </body>
+</html>
